@@ -12,7 +12,9 @@ That's it.
 from __future__ import annotations
 
 import os
+import re
 import signal
+import socket
 import subprocess
 import sys
 import time
@@ -35,6 +37,58 @@ def warn(msg: str) -> None:
 
 def fail(msg: str) -> None:
     print(f"\033[31m[launcher]\033[0m {msg}")
+
+
+def port_holders(port: int) -> list[int]:
+    """Return PIDs listening on `port` (best-effort, Windows + Unix)."""
+    # Quick check: can we actually bind?
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind(("127.0.0.1", port))
+        return []
+    except OSError:
+        pass
+
+    pids: set[int] = set()
+    if IS_WIN:
+        try:
+            out = subprocess.check_output(["netstat", "-ano"], text=True, errors="ignore")
+        except Exception:
+            return []
+        pattern = re.compile(rf":{port}\s+\S+\s+LISTENING\s+(\d+)")
+        for line in out.splitlines():
+            m = pattern.search(line)
+            if m:
+                pids.add(int(m.group(1)))
+    else:
+        try:
+            out = subprocess.check_output(["lsof", "-ti", f":{port}"], text=True)
+            pids.update(int(p) for p in out.split() if p.strip().isdigit())
+        except Exception:
+            pass
+    return sorted(pids)
+
+
+def free_port(port: int) -> None:
+    """If port is held by a lingering python/uvicorn, kill it. Bail otherwise."""
+    holders = port_holders(port)
+    if not holders:
+        return
+    info(f"Port {port} is held by PID(s): {holders}. Trying to release ...")
+    for pid in holders:
+        try:
+            if IS_WIN:
+                subprocess.run(["taskkill", "/F", "/PID", str(pid)], check=False,
+                               capture_output=True)
+            else:
+                os.kill(pid, signal.SIGKILL)
+        except Exception as e:  # noqa: BLE001
+            warn(f"couldn't kill PID {pid}: {e}")
+    time.sleep(0.5)
+    if port_holders(port):
+        fail(f"Port {port} is still busy. Free it manually and retry.")
+        sys.exit(1)
+    info(f"Port {port} freed.")
 
 
 # ─── pre-flight checks ──────────────────────────────────────────────────────
@@ -109,6 +163,10 @@ def main() -> None:
     # Ensure imports inside uvicorn worker resolve `app.*` correctly
     os.chdir(BACKEND)
     sys.path.insert(0, str(BACKEND))
+
+    # Both ports must be free before we spawn anything
+    free_port(8000)   # backend
+    free_port(5173)   # frontend (vite is also strict-port)
 
     frontend = start_frontend()
     # Tiny stagger so frontend banner doesn't tangle with backend banner
