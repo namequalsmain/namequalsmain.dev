@@ -67,9 +67,10 @@ export default function App() {
 
 function NotFound() {
   return (
-    <main className="mx-auto max-w-3xl px-6 py-24 text-center">
-      <h1 className="text-4xl text-slate-100">404</h1>
-      <p className="mt-2 text-slate-400">Page not found.</p>
+    <main className="mx-auto max-w-3xl px-8 py-32 text-center">
+      <p className="font-mono text-xs uppercase tracking-widest text-ink-faint">404</p>
+      <h1 className="mt-4 font-serif text-7xl leading-none tracking-tightest">Not here.</h1>
+      <p className="mt-6 text-ink-muted">The page you wanted doesn't exist.</p>
     </main>
   );
 }

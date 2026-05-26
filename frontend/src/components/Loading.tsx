@@ -1,14 +1,14 @@
-export function Loading({ label = 'Loading...' }: { label?: string }) {
+export function Loading({ label = 'Loading' }: { label?: string }) {
   return (
-    <div className="flex items-center justify-center py-12 text-slate-500 text-sm">
-      {label}
+    <div className="py-12 font-mono text-xs uppercase tracking-widest text-ink-faint">
+      {label}<span className="animate-pulse">...</span>
     </div>
   );
 }
 
 export function ErrorBox({ message }: { message: string }) {
   return (
-    <div className="card border-red-900 bg-red-950 text-red-300 text-sm">
+    <div className="py-6 border-l-2 border-accent pl-4 font-mono text-sm text-accent">
       {message}
     </div>
   );

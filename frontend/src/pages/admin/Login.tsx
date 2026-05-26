@@ -18,7 +18,7 @@ export function AdminLogin() {
       const { access_token } = await authApi.login({ username, password });
       setToken(access_token);
       navigate('/admin');
-    } catch (err) {
+    } catch {
       setError('Invalid username or password.');
     } finally {
       setSubmitting(false);
@@ -26,9 +26,12 @@ export function AdminLogin() {
   }
 
   return (
-    <main className="mx-auto max-w-sm px-6 py-24">
-      <h1 className="text-2xl text-slate-100 mb-6">Admin login</h1>
-      <form onSubmit={handleSubmit} className="card flex flex-col gap-4">
+    <main className="mx-auto max-w-sm px-8 py-24">
+      <p className="font-mono text-xs uppercase tracking-widest text-ink-faint mb-2">
+        Restricted
+      </p>
+      <h1 className="font-serif text-5xl tracking-tightest mb-8">Sign in</h1>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
         <div>
           <label className="label" htmlFor="username">Username</label>
           <input
@@ -52,8 +55,12 @@ export function AdminLogin() {
             required
           />
         </div>
-        {error && <p className="text-sm text-red-400">{error}</p>}
-        <button type="submit" className="btn-primary" disabled={submitting}>
+        {error && (
+          <p className="font-mono text-xs text-accent border-l-2 border-accent pl-3">
+            {error}
+          </p>
+        )}
+        <button type="submit" className="btn-primary mt-4" disabled={submitting}>
           {submitting ? 'Signing in...' : 'Sign in'}
         </button>
       </form>

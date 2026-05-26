@@ -25,19 +25,18 @@ export function AdminDashboard() {
   }
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-12">
-      <header className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl text-slate-100">Admin</h1>
-        <div className="flex gap-3">
-          <Link to="/admin/profile" className="btn-secondary">
-            Edit profile
-          </Link>
-          <Link to="/admin/projects/new" className="btn-primary">
-            New project
-          </Link>
-          <button onClick={logout} className="btn-secondary">
-            Sign out
-          </button>
+    <main className="mx-auto max-w-3xl px-8 py-16">
+      <header className="flex items-end justify-between mb-12 flex-wrap gap-4">
+        <div>
+          <p className="font-mono text-xs uppercase tracking-widest text-ink-faint">
+            Restricted
+          </p>
+          <h1 className="font-serif text-5xl tracking-tightest mt-1">Admin</h1>
+        </div>
+        <div className="flex gap-3 flex-wrap">
+          <Link to="/admin/profile" className="btn-ghost">Edit profile</Link>
+          <Link to="/admin/projects/new" className="btn-primary">+ New project</Link>
+          <button onClick={logout} className="btn-ghost">Sign out</button>
         </div>
       </header>
 
@@ -45,41 +44,43 @@ export function AdminDashboard() {
       {projectsQ.isError && <ErrorBox message="Couldn't load projects." />}
 
       {projectsQ.data && (
-        <div className="flex flex-col gap-3">
+        <div className="border-t border-ink/15">
           {projectsQ.data.length === 0 && (
-            <p className="text-slate-500 italic">
-              No projects yet. Click "New project" to add the first one.
+            <p className="py-12 font-serif italic text-ink-muted">
+              No projects yet — click "New project" above.
             </p>
           )}
           {projectsQ.data.map((p) => (
             <div
               key={p.id}
-              className="card flex items-center gap-4 hover:border-slate-700 transition-colors"
+              className="flex items-center gap-4 py-5 border-b border-ink/15 hover:bg-paper-dark/40 -mx-4 px-4 transition-colors"
             >
               {p.cover_image && (
                 <img
                   src={uploadUrl(p.cover_image)!}
                   alt=""
-                  className="w-20 h-14 object-cover rounded border border-slate-800"
+                  className="w-16 h-12 object-cover border border-ink/15 shrink-0"
                 />
               )}
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-slate-100 font-medium">{p.title}</span>
+                <div className="flex items-center gap-3">
+                  <span className="font-serif text-xl text-ink">{p.title}</span>
                   {!p.is_published && (
-                    <span className="text-xs bg-slate-800 text-slate-400 px-2 py-0.5 rounded">
+                    <span className="font-mono text-[10px] uppercase tracking-wider px-1.5 py-0.5 border border-ink/30 text-ink-muted">
                       draft
                     </span>
                   )}
                 </div>
-                <p className="text-sm text-slate-500 truncate">{p.summary}</p>
+                {p.summary && (
+                  <p className="text-sm text-ink-muted truncate">{p.summary}</p>
+                )}
               </div>
               <div className="flex gap-2 shrink-0">
-                <Link to={`/admin/projects/${p.id}/edit`} className="btn-secondary text-sm">
+                <Link to={`/admin/projects/${p.id}/edit`} className="btn-ghost !py-1 !text-xs">
                   Edit
                 </Link>
                 <button
-                  className="btn-danger text-sm"
+                  className="btn-danger !py-1 !text-xs"
                   onClick={() => {
                     if (confirm(`Delete "${p.title}"? This cannot be undone.`)) {
                       deleteM.mutate(p.id);

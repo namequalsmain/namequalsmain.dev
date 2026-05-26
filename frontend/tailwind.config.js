@@ -4,14 +4,28 @@ export default {
   theme: {
     extend: {
       colors: {
+        // "Paper" palette — warm cream and near-black, with terracotta accent
+        paper: {
+          DEFAULT: '#f5f1ea',
+          dark: '#ece6da',
+        },
+        ink: {
+          DEFAULT: '#111111',
+          muted: '#5b5853',
+          faint: '#a8a39a',
+        },
         accent: {
-          DEFAULT: '#3b82f6',
-          dark: '#2563eb',
+          DEFAULT: '#c2410c',   // terracotta
+          dark: '#9a3412',
         },
       },
       fontFamily: {
+        serif: ['"Instrument Serif"', 'Georgia', 'serif'],
         sans: ['Inter', 'system-ui', 'sans-serif'],
-        mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
+        mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+      },
+      letterSpacing: {
+        tightest: '-0.04em',
       },
     },
   },

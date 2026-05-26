@@ -66,29 +66,36 @@ portfolio/
 
 ## Local dev
 
-### Backend
+### One-command launch (after first-time setup)
 
 ```bash
+python main.py
+```
+
+That's it — backend (8000) + frontend (5173) start together. Ctrl+C stops both.
+
+### First-time setup
+
+```bash
+# Backend deps
 cd backend
 python -m venv .venv
 source .venv/bin/activate            # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-cp .env.example .env                 # fill in ADMIN_PASSWORD etc.
 alembic upgrade head
-uvicorn app.main:app --reload
-# → http://localhost:8000
-# → docs at http://localhost:8000/docs
-```
+cd ..
 
-### Frontend
-
-```bash
+# Frontend deps
 cd frontend
 npm install
-cp .env.example .env                 # set VITE_API_URL=http://localhost:8000
-npm run dev
-# → http://localhost:5173
+cd ..
+
+# Run everything
+python main.py
 ```
+
+`main.py` will auto-create `.env` files from `.env.example` on first run — edit
+them to set `ADMIN_PASSWORD` and `SECRET_KEY` before first prod use.
 
 ### Or with Docker
 
