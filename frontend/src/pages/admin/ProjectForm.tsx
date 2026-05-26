@@ -15,14 +15,15 @@ export function AdminProjectForm() {
   const editing = id !== undefined;
   const projectId = editing ? Number(id) : null;
 
-  const [form, setForm] = useState<ProjectInput & { cover_image: string | null }>({
+  const [form, setForm] = useState<ProjectInput & { cover_image: string | null; gallery: string[] }>({
     slug: '', title: '', summary: '', description: '',
     tech_stack: [], github_url: '', demo_url: '',
-    cover_image: null, sort_order: 0, is_published: true,
+    cover_image: null, gallery: [], sort_order: 0, is_published: true,
   });
   const [techInput, setTechInput] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [galleryUploading, setGalleryUploading] = useState(false);
 
   const existingQ = useQuery({
     queryKey: ['admin-project', projectId],
@@ -37,7 +38,8 @@ export function AdminProjectForm() {
         slug: p.slug, title: p.title, summary: p.summary, description: p.description,
         tech_stack: p.tech_stack,
         github_url: p.github_url ?? '', demo_url: p.demo_url ?? '',
-        cover_image: p.cover_image, sort_order: p.sort_order, is_published: p.is_published,
+        cover_image: p.cover_image, gallery: p.gallery ?? [],
+        sort_order: p.sort_order, is_published: p.is_published,
       });
     }
   }, [existingQ.data]);
@@ -74,6 +76,30 @@ export function AdminProjectForm() {
     } finally {
       setUploading(false);
     }
+  }
+
+  async function handleGalleryAdd(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []);
+    if (files.length === 0) return;
+    setGalleryUploading(true);
+    setError(null);
+    try {
+      const uploaded = await Promise.all(files.map((f) => uploadApi.uploadImage(f)));
+      setForm((f) => ({
+        ...f,
+        gallery: [...(f.gallery ?? []), ...uploaded.map((u) => u.filename)],
+      }));
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Gallery upload failed.');
+    } finally {
+      setGalleryUploading(false);
+      // Reset file input so the same files can be re-selected if needed
+      e.target.value = '';
+    }
+  }
+
+  function removeFromGallery(filename: string) {
+    setForm((f) => ({ ...f, gallery: (f.gallery ?? []).filter((x) => x !== filename) }));
   }
 
   function addTech() {
@@ -204,6 +230,44 @@ export function AdminProjectForm() {
                     onClick={() => setForm((f) => ({ ...f, cover_image: null }))}>
               Remove image
             </button>
+          )}
+        </div>
+
+        <div>
+          <label className="label">Gallery (extra screenshots)</label>
+          {(form.gallery ?? []).length > 0 && (
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-3">
+              {(form.gallery ?? []).map((filename) => (
+                <div key={filename} className="relative border border-ink/15 group">
+                  <img src={uploadUrl(filename)!} alt=""
+                       className="w-full h-24 object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => removeFromGallery(filename)}
+                    className="absolute inset-0 flex items-center justify-center
+                               bg-ink/0 group-hover:bg-ink/70 text-paper opacity-0
+                               group-hover:opacity-100 transition-all font-mono text-xs uppercase tracking-widest"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          <input
+            type="file"
+            multiple
+            accept="image/png,image/jpeg,image/webp,image/gif"
+            onChange={handleGalleryAdd}
+            disabled={galleryUploading}
+            className="block w-full text-sm text-ink-muted font-mono
+                       file:mr-3 file:py-2 file:px-4 file:border file:border-ink
+                       file:bg-transparent file:text-ink file:text-xs file:uppercase
+                       file:tracking-wider file:font-mono file:cursor-pointer
+                       hover:file:bg-ink hover:file:text-paper transition-colors"
+          />
+          {galleryUploading && (
+            <p className="text-xs text-ink-faint mt-1 font-mono">Uploading...</p>
           )}
         </div>
 

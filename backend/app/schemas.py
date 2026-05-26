@@ -58,6 +58,7 @@ class Project(BaseModel):
     github_url: str | None = None
     demo_url: str | None = None
     cover_image: str | None = None
+    gallery: list[str] = []
     sort_order: int
     is_published: bool
     created_at: datetime
@@ -73,6 +74,7 @@ class ProjectCreate(BaseModel):
     github_url: str | None = None
     demo_url: str | None = None
     cover_image: str | None = None
+    gallery: list[str] = []
     sort_order: int = 0
     is_published: bool = True
 
@@ -86,6 +88,7 @@ class ProjectUpdate(BaseModel):
     github_url: str | None = None
     demo_url: str | None = None
     cover_image: str | None = None
+    gallery: list[str] | None = None
     sort_order: int | None = None
     is_published: bool | None = None
 

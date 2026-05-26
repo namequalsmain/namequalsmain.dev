@@ -53,6 +53,8 @@ class Project(Base):
     demo_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
     # Filename in UPLOAD_DIR (e.g. 'abcd-screenshot.png'), not a full URL.
     cover_image: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    # Optional extra screenshots — list of filenames in UPLOAD_DIR.
+    gallery: Mapped[list[str]] = mapped_column(JSON, default=list, nullable=False)
     sort_order: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     is_published: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     created_at: Mapped[datetime] = mapped_column(

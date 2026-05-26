@@ -10,6 +10,7 @@ export type Project = {
   github_url: string | null;
   demo_url: string | null;
   cover_image: string | null;
+  gallery: string[];
   sort_order: number;
   is_published: boolean;
   created_at: string;
@@ -25,6 +26,7 @@ export type ProjectInput = {
   github_url?: string | null;
   demo_url?: string | null;
   cover_image?: string | null;
+  gallery?: string[];
   sort_order?: number;
   is_published?: boolean;
 };

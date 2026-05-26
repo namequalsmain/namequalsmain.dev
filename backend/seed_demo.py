@@ -14,7 +14,6 @@ import shutil
 import sys
 from pathlib import Path
 
-# Add backend/ to sys.path so `from app...` works when run directly
 BACKEND_ROOT = Path(__file__).parent
 sys.path.insert(0, str(BACKEND_ROOT))
 
@@ -23,25 +22,36 @@ from app.repo import profile as profile_repo  # noqa: E402
 from app.repo import projects as projects_repo  # noqa: E402
 
 
-# ─── Content ────────────────────────────────────────────────────────────────
+# ─── Profile content ────────────────────────────────────────────────────────
 PROFILE = dict(
     name="namequalsmain",
     headline="Python developer. Backends, bots, automation.",
     bio=(
         "I build Python backends and integrations: REST APIs, Telegram bots, "
         "data pipelines, automation tools.\n\n"
-        "Production code — typed, tested, dockerized, with proper migrations "
-        "and a clean separation between data, logic, and UI. No "
-        "framework-of-the-month, no half-finished demos.\n\n"
+        "Day-to-day stack: FastAPI · aiogram 3 · SQLAlchemy 2 async · "
+        "PostgreSQL · Alembic · Docker. Comfortable with async patterns, "
+        "type-driven design (Pydantic, typed CallbackData factories), and "
+        "the boring-but-important parts — migrations, structured logging, "
+        "CI pipelines, deploy.\n\n"
+        "What I take end-to-end:\n"
+        "  — REST APIs with proper schemas, JWT auth, OpenAPI docs\n"
+        "  — Telegram bots: FSM flows, payments, broadcasts, admin panels\n"
+        "  — Data layer: async SQLAlchemy, migrations, repository pattern\n"
+        "  — Integrations & scraping: httpx, retries, rate limiting\n"
+        "  — Deployment: Docker, GitHub Actions, Render / Fly.io / VPS\n\n"
+        "Production code — typed, tested, dockerized, no framework-of-the-month, "
+        "no half-finished demos.\n\n"
         "Based in Israel. Open to contract work."
     ),
     email="namequalsmain@gmail.com",
-    telegram=None,                              # fill via /admin/profile when ready
+    telegram=None,
     github_url="https://github.com/namequalsmain",
     linkedin_url=None,
 )
 
 
+# ─── Project content ────────────────────────────────────────────────────────
 BOT_DESCRIPTION = """\
 A complete marketplace platform inside Telegram. Users browse a category tree, \
 view product cards with photos, and pay with Telegram Stars — all without \
@@ -89,51 +99,62 @@ PROJECT = dict(
 )
 
 
-# ─── Cover image ────────────────────────────────────────────────────────────
+# ─── Images ─────────────────────────────────────────────────────────────────
 BOT_SCREENSHOTS = (BACKEND_ROOT / ".." / ".." / "market" / "docs" / "screenshots").resolve()
-COVER_SOURCE = BOT_SCREENSHOTS / "01-main-menu.png"
+COVER_FILE = "01-main-menu.png"
+GALLERY_FILES = ["01-main-menu.png", "02-catalog.png", "03-product-list.png", "04-settings.png"]
 
 
-def copy_cover_image() -> str | None:
-    """Copy a screenshot from the bot repo into backend/uploads/ with a random name.
-
-    Returns the new filename, or None if the source isn't there.
-    """
-    if not COVER_SOURCE.exists():
-        print(f"  [warn] no cover image at {COVER_SOURCE} - skipping cover")
+def copy_image(src_filename: str, prefix: str) -> str | None:
+    """Copy one screenshot from the bot repo into backend/uploads/. Returns new name."""
+    src = BOT_SCREENSHOTS / src_filename
+    if not src.exists():
+        print(f"  [warn] missing source: {src}")
         return None
-
     uploads = BACKEND_ROOT / "uploads"
     uploads.mkdir(exist_ok=True)
-    new_name = f"{secrets.token_urlsafe(12)}-bot-cover.png"
-    shutil.copy(COVER_SOURCE, uploads / new_name)
-    print(f"  [ok] copied cover image -> uploads/{new_name}")
+    new_name = f"{secrets.token_urlsafe(10)}-{prefix}-{src_filename}"
+    shutil.copy(src, uploads / new_name)
     return new_name
+
+
+def stage_images() -> tuple[str | None, list[str]]:
+    """Copy cover + all gallery shots. Returns (cover_filename, [gallery_filenames])."""
+    cover = copy_image(COVER_FILE, "cover")
+    if cover:
+        print(f"  [ok] cover     -> uploads/{cover}")
+
+    gallery: list[str] = []
+    for src in GALLERY_FILES:
+        new = copy_image(src, "gallery")
+        if new:
+            gallery.append(new)
+            print(f"  [ok] gallery   -> uploads/{new}")
+    return cover, gallery
 
 
 # ─── Main ───────────────────────────────────────────────────────────────────
 async def main() -> None:
     print("Seeding portfolio demo content...")
-
-    cover_filename = copy_cover_image()
+    cover_filename, gallery_filenames = stage_images()
 
     async with async_session_maker() as session:
-        # Profile (singleton)
         await profile_repo.update(session, **PROFILE)
         print("  [ok] profile updated")
 
-        # Project - re-create if it exists, so the script is idempotent
         existing = await projects_repo.get_by_slug(session, PROJECT["slug"])
         if existing:
             await projects_repo.delete(session, existing)
-            print(f"  [-] removed existing '{PROJECT['slug']}'")
+            print(f"  [-]  removed existing '{PROJECT['slug']}'")
 
         await projects_repo.create(
             session,
             cover_image=cover_filename,
+            gallery=gallery_filenames,
             **PROJECT,
         )
-        print(f"  [ok] project '{PROJECT['title']}' created")
+        print(f"  [ok] project '{PROJECT['title']}' created with "
+              f"{len(gallery_filenames)} gallery images")
 
     print("\nDone. If the backend isn't running:")
     print("    python main.py   (from project root)")

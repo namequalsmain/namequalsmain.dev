@@ -94,6 +94,35 @@ export function ProjectDetail() {
               {q.data.description}
             </div>
           )}
+
+          {/* Gallery — vertical for "tall" images (phone screenshots), grid otherwise */}
+          {q.data.gallery && q.data.gallery.length > 0 && (
+            <section className="mt-4">
+              <p className="font-mono text-xs uppercase tracking-widest text-ink-faint mb-4">
+                Screenshots
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {q.data.gallery.map((filename, i) => (
+                  <a
+                    key={filename}
+                    href={uploadUrl(filename)!}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block group border border-ink/15 bg-paper-dark
+                               overflow-hidden hover:border-ink transition-colors"
+                  >
+                    <img
+                      src={uploadUrl(filename)!}
+                      alt={`${q.data.title} screenshot ${i + 1}`}
+                      className="w-full h-full object-contain
+                                 group-hover:scale-[1.01] transition-transform"
+                      loading="lazy"
+                    />
+                  </a>
+                ))}
+              </div>
+            </section>
+          )}
         </article>
       )}
     </main>
