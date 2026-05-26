@@ -21,7 +21,6 @@ from app.database import async_session_maker  # noqa: E402
 from app.repo import profile as profile_repo  # noqa: E402
 from app.repo import projects as projects_repo  # noqa: E402
 
-
 # ─── Profile content ────────────────────────────────────────────────────────
 PROFILE = dict(
     name="namequalsmain",
@@ -106,7 +105,10 @@ GALLERY_FILES = ["01-main-menu.png", "02-catalog.png", "03-product-list.png", "0
 
 
 def copy_image(src_filename: str, prefix: str) -> str | None:
-    """Copy one screenshot from the bot repo into backend/uploads/. Returns new name."""
+    """Copy one screenshot into backend/uploads/. Returns '/uploads/<new>' path.
+
+    Matches the storage abstraction format (LocalStorage returns '/uploads/...').
+    """
     src = BOT_SCREENSHOTS / src_filename
     if not src.exists():
         print(f"  [warn] missing source: {src}")
@@ -115,7 +117,7 @@ def copy_image(src_filename: str, prefix: str) -> str | None:
     uploads.mkdir(exist_ok=True)
     new_name = f"{secrets.token_urlsafe(10)}-{prefix}-{src_filename}"
     shutil.copy(src, uploads / new_name)
-    return new_name
+    return f"/uploads/{new_name}"
 
 
 def stage_images() -> tuple[str | None, list[str]]:

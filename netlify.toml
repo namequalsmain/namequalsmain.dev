@@ -1,0 +1,17 @@
+# Netlify build config — push to GitHub, "Add new site → Import from Git",
+# select this repo, Netlify picks up these settings automatically.
+
+[build]
+  base = "frontend"
+  command = "npm run build"
+  publish = "frontend/dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+  # VITE_API_URL is set in the Netlify dashboard, not here — different per env.
+
+# SPA fallback for client-side routes (e.g. /admin/login, /projects/:slug)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

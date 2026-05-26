@@ -32,11 +32,17 @@ api.interceptors.response.use(
   }
 );
 
-/** Turn a stored filename (`abcd.png`) into a full URL to the upload. */
-export function uploadUrl(filename: string | null | undefined): string | null {
-  if (!filename) return null;
-  // Backend serves /uploads/<filename>
-  if (filename.startsWith('http')) return filename;
-  if (filename.startsWith('/uploads/')) return `${API_URL}${filename}`;
-  return `${API_URL}/uploads/${filename}`;
+/**
+ * Resolve a stored value to a fetchable image URL.
+ *
+ * The backend stores one of three forms in `cover_image` / `gallery`:
+ *   - absolute URL (R2 backend in prod) → return as-is
+ *   - '/uploads/...'  (local backend)   → prepend the API origin
+ *   - bare filename   (legacy)          → prepend `${API_URL}/uploads/`
+ */
+export function uploadUrl(value: string | null | undefined): string | null {
+  if (!value) return null;
+  if (value.startsWith('http://') || value.startsWith('https://')) return value;
+  if (value.startsWith('/')) return `${API_URL}${value}`;
+  return `${API_URL}/uploads/${value}`;
 }

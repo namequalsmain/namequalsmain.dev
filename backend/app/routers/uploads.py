@@ -1,10 +1,9 @@
 """POST /api/uploads — admin-only image upload.
 
-Stores files in UPLOAD_DIR with a random filename to avoid collisions.
-Returns the relative URL — the frontend prefixes it with the API base.
+Delegates to the configured Storage backend (local filesystem or R2).
+Returns the URL/path that should be saved into project.cover_image / gallery.
 """
 
-import secrets
 from pathlib import Path
 
 from fastapi import APIRouter, File, HTTPException, UploadFile, status
@@ -12,6 +11,7 @@ from fastapi import APIRouter, File, HTTPException, UploadFile, status
 from app import schemas
 from app.config import settings
 from app.deps import AdminDep
+from app.storage import storage
 
 router = APIRouter(prefix="/api/uploads", tags=["uploads"])
 
@@ -36,8 +36,6 @@ async def upload_image(
             f"Unsupported file extension: {ext}",
         )
 
-    # Read into memory once to enforce size limit; for a portfolio site
-    # files are small (< 5 MB) — no need to stream.
     data = await file.read()
     if len(data) > settings.MAX_UPLOAD_BYTES:
         raise HTTPException(
@@ -45,9 +43,7 @@ async def upload_image(
             f"File too large (max {settings.MAX_UPLOAD_BYTES} bytes)",
         )
 
-    upload_dir = Path(settings.UPLOAD_DIR)
-    upload_dir.mkdir(parents=True, exist_ok=True)
-    filename = f"{secrets.token_urlsafe(12)}{ext}"
-    (upload_dir / filename).write_bytes(data)
-
-    return schemas.UploadResponse(filename=filename, url=f"/uploads/{filename}")
+    url = await storage.put(data, ext, file.content_type)
+    # Compat: `filename` in the response now holds the storage key/path/URL.
+    # The schema name is preserved for backward compat — old clients still work.
+    return schemas.UploadResponse(filename=url, url=url)
