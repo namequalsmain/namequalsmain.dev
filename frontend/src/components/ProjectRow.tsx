@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import type { Project } from '@/api/types';
+import type { Project } from '@/content/types';
 
 /**
  * One project as a numbered editorial row.
